@@ -20,7 +20,7 @@ st.markdown(
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
     :root{
-      --bg-top:#1a4b44;      /* deeper teal */
+      --bg-top:#1a4b44;      /* softer teal */
       --bg-bottom:#204f47;   /* softer teal/graphite */
       --ivory:#FFFFFF;       /* main text - pure white */
       --muted:#E6F0EE;       /* light muted (for subtle text) */
@@ -42,7 +42,7 @@ st.markdown(
       color: var(--muted);
       margin-top: 0px;
       margin-bottom: 14px;
-      font-size: 13.5px;
+      font-size: 20.5px;
     }
     [data-testid="stSidebar"]{
       background: linear-gradient(180deg, rgba(15,30,28,0.95), rgba(12,26,25,0.92));
@@ -314,7 +314,7 @@ with right:
     # show metric cards with white boxes for readability
     metric_cols = st.columns(len(mm))
     for i, (k, v) in enumerate(mm.items()):
-        metric_cols[i].markdown(f"<div class='metric-box'><div style='font-weight:600'>{k}</div><div style='font-size:18px; margin-top:6px'>{v}</div></div>", unsafe_allow_html=True)
+        metric_cols[i].markdown(f"<div class='metric-box'><div style='font-weight:600'>{k}</div><div style='font-size:20px; margin-top:6px'>{v}</div></div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -330,7 +330,7 @@ with right:
     typing_html = f"""
     <div class="ai-box" id="aiBox">
       <div class="ai-title">System Analysis</div>
-      <div class="muted">Automated insight (read-only)</div>
+      // WebAudio typing sound (subtle)
       <div style="height:10px;"></div>
       <div id="typing" style="white-space:pre-wrap; font-size:14px; color: #FFFFFF;"></div>
     </div>
@@ -383,7 +383,6 @@ with right:
         // remove listener once resumed
         document.removeEventListener('click', initAudio);
       }});
-      // start typing after small delay
       setTimeout(typeChar, 300);
     }}
     </script>
