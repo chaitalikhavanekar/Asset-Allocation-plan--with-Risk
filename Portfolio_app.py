@@ -1,9 +1,57 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 
+# ----- PAGE CONFIG -----
 st.set_page_config(page_title="Asset Allocation Dashboard", layout="wide")
 
+# ----- APP STYLING -----
+st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* Background gradient */
+[data-testid="stAppViewContainer"] {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Title glow */
+h1, h2, h3 {
+    color: #00ffe1;
+    text-shadow: 0 0 15px #00ffe1, 0 0 30px #00ffe1;
+    font-weight: 700;
+}
+
+/* 3D-style data table */
+.dataframe {
+    border-radius: 15px;
+    border: 1px solid #00ffd5;
+    box-shadow: 0 0 20px #00ffd5;
+    background-color: rgba(10, 10, 10, 0.9);
+    color: #ffffff;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: #1a1a1a;
+    border-right: 2px solid #00ffe1;
+    box-shadow: 5px 0 10px rgba(0, 255, 225, 0.3);
+}
+
+/* Metrics styling */
+[data-testid="stMetricValue"] {
+    color: #00ffd5 !important;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00ffd5;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ----- TITLE -----
 st.title("💼 Asset Allocation Portfolio Dashboard")
 st.markdown("Compare risk profiles, asset weights, and returns with interactive visuals and logic insights.")
 
@@ -136,6 +184,16 @@ metric = metrics[profile]
 cols = st.columns(len(metric))
 for i, (key, val) in enumerate(metric.items()):
     cols[i].metric(key, val)
+
+# ----- OPTIONAL: 3D CHART -----
+st.markdown("### 🌐 3D Risk–Reward Surface (Demo)")
+x = np.linspace(-5, 5, 50)
+y = np.linspace(-5, 5, 50)
+x, y = np.meshgrid(x, y)
+z = np.sin(np.sqrt(x**2 + y**2))
+fig3d = go.Figure(data=[go.Surface(z=z, x=x, y=y, colorscale='Viridis')])
+fig3d.update_layout(scene=dict(xaxis_title='Asset Class', yaxis_title='Risk', zaxis_title='Reward'))
+st.plotly_chart(fig3d, use_container_width=True)
 
 # ----- SOURCES -----
 with st.expander("📚 Data Sources & References"):
