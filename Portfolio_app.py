@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import time
-from textwrap import wrap
+import html
+from textwrap import shorten
 
 # -------------------------
 # Page config
@@ -13,47 +13,44 @@ from textwrap import wrap
 st.set_page_config(page_title="Asset Allocation Dashboard", layout="wide", initial_sidebar_state="auto")
 
 # -------------------------
-# Styling (TaxBase-inspired)
+# Styling + Fonts (Modern Executive)
 # -------------------------
 st.markdown(
     """
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
     :root{
-      --bg-top:#0f3a34;        /* deep forest tone */
-      --bg-bottom:#173f3a;     /* softer graphite */
-      --accent-gold:#E9C46A;   /* gold accent */
-      --ivory:#F4F4F2;         /* main text */
-      --soft-silver:#D8D8D8;   /* secondary text */
-      --glass: rgba(255,255,255,0.04);
+      --bg-top:#1a4b44;      /* deeper teal */
+      --bg-bottom:#204f47;   /* softer teal/graphite */
+      --ivory:#FFFFFF;       /* main text - pure white */
+      --muted:#E6F0EE;       /* light muted (for subtle text) */
+      --accent-gold:#E9C46A; /* gold accent */
+      --card:#163933;        /* card panel */
     }
-    /* app background */
     [data-testid="stAppViewContainer"]{
       background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
       color: var(--ivory);
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Montserrat', sans-serif;
     }
-    /* header */
-    .big-title {
+    .title-large {
       font-size: 34px;
       font-weight: 700;
       color: var(--ivory);
       margin-bottom: 6px;
     }
     .subtitle {
-      color: var(--soft-silver);
+      color: var(--muted);
       margin-top: 0px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
+      font-size: 13.5px;
     }
-    /* sidebar */
     [data-testid="stSidebar"]{
-      background: linear-gradient(180deg, rgba(10,20,20,0.95), rgba(14,28,28,0.92));
+      background: linear-gradient(180deg, rgba(15,30,28,0.95), rgba(12,26,25,0.92));
       border-right: 1px solid rgba(255,255,255,0.04);
     }
-    /* dataframe glass */
     [data-testid="stDataFrame"] table {
       border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      background: rgba(255,255,255,0.02);
       border: 1px solid rgba(233,196,106,0.06);
       overflow: hidden;
     }
@@ -62,6 +59,7 @@ st.markdown(
       color: #071b19 !important;
       font-weight: 600;
       text-align:center;
+      padding: 8px;
     }
     [data-testid="stDataFrame"] td {
       color: var(--ivory) !important;
@@ -69,31 +67,38 @@ st.markdown(
       padding: 6px 8px;
       font-size: 14px;
     }
-    /* metrics */
-    .metric-span {
-      color: var(--accent-gold);
-      font-weight: 700;
-      font-size: 18px;
-    }
-    /* AI summary box */
-    .ai-box {
-      background: rgba(10,12,12,0.55);
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border-radius: 10px;
-      border: 1px solid rgba(233,196,106,0.12);
-      padding: 16px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    }
+    .ai-box {
+      background: rgba(8,12,11,0.65);
+      border-radius: 10px;
+      border: 1px solid rgba(233,196,106,0.10);
+      padding: 14px;
       color: var(--ivory);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.5);
       font-size: 15px;
-      line-height: 1.5;
+      line-height:1.5;
     }
     .ai-title {
       color: var(--accent-gold);
       font-weight: 700;
       margin-bottom: 6px;
-      font-size: 16px;
+      font-size: 15px;
     }
-    .muted {
-      color: var(--soft-silver);
+    .muted { color: var(--muted); font-size:13px; }
+    .small { font-size:13px; color:var(--muted); }
+    .metric-box {
+      background: #fff;
+      color: #043;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
     </style>
     """,
@@ -101,13 +106,13 @@ st.markdown(
 )
 
 # -------------------------
-# Title and subtitle
+# Title
 # -------------------------
-st.markdown('<div class="big-title">Asset Allocation Portfolio Dashboard</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Visualize low / moderate / high risk portfolios with clear tables, pro charts, and an AI-style summary panel.</div>', unsafe_allow_html=True)
+st.markdown('<div class="title-large">Asset Allocation Portfolio Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Executive dashboard — clear tables, pro charts, and an AI-style summary module (typing + subtle sound).</div>', unsafe_allow_html=True)
 
 # -------------------------
-# Data (keeps your original logic & summary text)
+# Data (original logic & summary preserved)
 # -------------------------
 data = {
     "Low Risk (45–65)": pd.DataFrame({
@@ -181,7 +186,7 @@ data = {
 }
 
 # -------------------------
-# Risk metrics (kept from your sheet)
+# Risk metrics (kept)
 # -------------------------
 metrics = {
     "Low Risk (45–65)": {"Expected Return": "7.95%", "Risk (Std. Dev.)": "9.90%", "Worst (95%)": "-11%", "Best (95%)": "27%", "Sharpe-like": "0.80"},
@@ -206,161 +211,189 @@ st.sidebar.header("Portfolio Controls")
 profile = st.sidebar.selectbox("Select Risk Profile", list(data.keys()))
 chart_type = st.sidebar.selectbox("Chart type", ["Bar", "Pie", "3D Scatter"])
 animate = st.sidebar.checkbox("Enable animation (pie/bar live redraw)", value=True)
-show_typing = st.sidebar.checkbox("Show AI summary typing", value=True)
-years = st.sidebar.slider("Projection horizon (years) for simple growth simulation", 1, 20, 10)
+show_typing = st.sidebar.checkbox("Enable typing + sound for AI summary", value=True)
+years = st.sidebar.slider("Projection horizon (years)", 1, 20, 10)
 
 # -------------------------
-# Current DataFrame
+# Prepare current DataFrame
 # -------------------------
 df = data[profile].copy()
 
-# center area layout
-left_col, right_col = st.columns([2, 1])
+# -------------------------
+# Layout: left (main) + right (AI box)
+# -------------------------
+left, right = st.columns([2.4, 1])
 
-with left_col:
+with left:
     st.subheader(f"Portfolio Overview — {profile}")
-    st.markdown("<div style='color: #D8D8D8; margin-bottom:6px;'>Full table with logic and summary retained (readable)</div>", unsafe_allow_html=True)
+    st.markdown("<div class='small'>Full table with logic & summary (kept as text fields). Use the right panel for AI-style insight.</div>", unsafe_allow_html=True)
     st.dataframe(df, use_container_width=True)
 
-    # small simulation: projected growth using expected return (convert simple)
+    # Projection
+    st.markdown("### Projection (simple compound growth)")
     base_return_map = {"Low Risk (45–65)": 0.0795, "Moderate Risk (30–45)": 0.09, "High Risk (25–30)": 0.1075}
     base_return = base_return_map[profile]
-    years_range = list(range(0, years + 1))
-    growth = [(1 + base_return) ** y for y in years_range]
-    sim_df = pd.DataFrame({"Year": years_range, "Index (Base=100)": np.round(100 * np.array(growth), 2)})
+    yrs = list(range(0, years + 1))
+    values = [(1 + base_return) ** y for y in yrs]
+    proj_df = pd.DataFrame({"Year": yrs, "Index (Base=100)": np.round(100 * np.array(values), 2)})
+    proj_fig = px.line(proj_df, x="Year", y="Index (Base=100)", markers=True)
+    proj_fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                           font=dict(color="#FFFFFF"))
+    st.plotly_chart(proj_fig, use_container_width=True)
 
-    st.markdown("### Projection (simple compound growth)")
-    fig_proj = px.line(sim_df, x="Year", y="Index (Base=100)", markers=True, title=f"Projection ({int(base_return*100)}% base return) over {years} yrs",
-                       template="plotly_dark")
-    fig_proj.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                           font=dict(color="#F4F4F2"))
-    st.plotly_chart(fig_proj, use_container_width=True)
+    # Charts: show primary allocation chart
+    st.markdown("### Allocation Visual")
+    col_a, col_b = st.columns([1, 1])
 
-with right_col:
-    st.subheader("Performance Metrics")
-    m = metrics[profile]
-    cols = st.columns(len(m))
-    for i, (k, v) in enumerate(m.items()):
-        cols[i].metric(k, v)
+    labels = df["Asset Class"].tolist()
+    vals = df["Allocation (%)"].tolist()
+    palette = {
+        "Equity (Stocks / MFs)": "#D4A373",
+        "Equity": "#D4A373",
+        "Debt / Fixed Income": "#4CB5AE",
+        "Debt": "#4CB5AE",
+        "Gold / Commodities": "#C08B4E",
+        "Gold": "#C08B4E",
+        "Real Estate": "#6B7280",
+        "Cash / Liquid Funds": "#CED4DA",
+        "Cash": "#CED4DA"
+    }
 
-# -------------------------
-# Charts (main)
-# -------------------------
-st.markdown("### Allocation Visuals")
-chart_col1, chart_col2 = st.columns([1, 1])
-
-palette = {
-    "Equity (Stocks / MFs)": "#D4A373",  # muted gold
-    "Equity": "#D4A373",
-    "Debt / Fixed Income": "#4CB5AE",    # teal
-    "Debt": "#4CB5AE",
-    "Gold / Commodities": "#C08B4E",     # coppery
-    "Gold": "#C08B4E",
-    "Real Estate": "#9DA3B4",            # steel
-    "Cash / Liquid Funds": "#CED4DA",    # light grey
-    "Cash": "#CED4DA"
-}
-
-# Prepare values & labels (handle multiple naming)
-labels = df["Asset Class"].tolist()
-values = df["Allocation (%)"].tolist()
-
-if chart_type == "Pie":
-    # animate by re-drawing small steps (if enabled)
-    if animate:
-        placeholder = st.empty()
-        for step in range(3):
-            # small random jitter to create subtle movement
-            jitter = np.random.randint(-2, 3, len(values))
-            cur_vals = np.clip(np.array(values) + jitter, 1, 100)
-            fig = px.pie(names=labels, values=cur_vals, hole=0.35)
+    if chart_type == "Pie":
+        if animate:
+            p = st.empty()
+            for _ in range(3):
+                jitter = np.random.randint(-2, 3, len(vals))
+                cur = np.clip(np.array(vals) + jitter, 1, 100)
+                fig = px.pie(names=labels, values=cur, hole=0.36)
+                fig.update_traces(textinfo='percent+label', marker=dict(colors=[palette.get(l.split(' ')[0], "#8AA4A8") for l in labels]))
+                fig.update_layout(showlegend=False, title=f"Allocation — {profile}", font=dict(color="#FFFFFF"))
+                p.plotly_chart(fig, use_container_width=True)
+        else:
+            fig = px.pie(names=labels, values=vals, hole=0.36)
             fig.update_traces(textinfo='percent+label', marker=dict(colors=[palette.get(l.split(' ')[0], "#8AA4A8") for l in labels]))
-            fig.update_layout(showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                              title=f"Allocation — {profile}")
-            placeholder.plotly_chart(fig, use_container_width=True)
-            time.sleep(0.25)
+            fig.update_layout(showlegend=False, title=f"Allocation — {profile}", font=dict(color="#FFFFFF"))
+            col_a.plotly_chart(fig, use_container_width=True)
+    elif chart_type == "Bar":
+        fig = px.bar(df, x="Asset Class", y="Allocation (%)", text="Allocation (%)")
+        fig.update_traces(marker_color=[palette.get(l.split(' ')[0], "#8AA4A8") for l in labels], showlegend=False)
+        fig.update_layout(title=f"Allocation — {profile}", font=dict(color="#FFFFFF"),
+                          plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+        col_a.plotly_chart(fig, use_container_width=True)
     else:
-        fig = px.pie(names=labels, values=values, hole=0.35)
-        fig.update_traces(textinfo='percent+label', marker=dict(colors=[palette.get(l.split(' ')[0], "#8AA4A8") for l in labels]))
-        fig.update_layout(showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                          title=f"Allocation — {profile}")
-        chart_col1.plotly_chart(fig, use_container_width=True)
+        # 3D scatter
+        risk_map = {"Very low": 1, "Very low":1, "Very Low":1, "Low": 2, "Low moderate":3, "Low-Moderate":3, "Moderate":4, "High":5}
+        df_plot = df.copy()
+        df_plot["Risk Score"] = df_plot["Risk"].map(risk_map).fillna(3)
+        def reward_num(v):
+            s = str(v)
+            nums = ''.join(ch for ch in s if ch.isdigit())
+            return float(nums) if nums else 0.0
+        df_plot["Reward %"] = df_plot["Reward (Expected)"].apply(reward_num)
+        fig3 = go.Figure(data=[go.Scatter3d(
+            x=df_plot["Allocation (%)"],
+            y=df_plot["Risk Score"],
+            z=df_plot["Reward %"],
+            text=df_plot["Asset Class"],
+            mode='markers+text',
+            marker=dict(size=8, color=df_plot["Allocation (%)"], colorscale='Viridis', opacity=0.95)
+        )])
+        fig3.update_layout(scene=dict(xaxis_title='Allocation (%)', yaxis_title='Risk Score', zaxis_title='Reward (%)'),
+                           title=f"3D Risk-Reward — {profile}", font=dict(color="#FFFFFF"),
+                           plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+        col_a.plotly_chart(fig3, use_container_width=True)
 
-elif chart_type == "Bar":
-    fig = px.bar(df, x="Asset Class", y="Allocation (%)", text="Allocation (%)",
-                 color="Asset Class", category_orders={"Asset Class": labels})
-    fig.update_traces(marker_color=[palette.get(l.split(' ')[0], "#8AA4A8") for l in labels], showlegend=False)
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', title=f"Allocation — {profile}",
-                      xaxis_title="", yaxis_title="Allocation (%)")
-    chart_col1.plotly_chart(fig, use_container_width=True)
-else:
-    # 3D scatter: Allocation vs Risk Score vs Reward %
-    # map textual Risk -> score
-    risk_map = {"Very low": 1, "Very Low":1, "Low": 2, "Low moderate":3, "Low-Moderate":3, "Moderate":4, "High":5}
-    df_plot = df.copy()
-    df_plot["Risk Score"] = df_plot["Risk"].map(risk_map).fillna(3)
-    # extract reward numeric
-    def extract_reward(x):
-        s = str(x)
-        digits = ''.join(ch for ch in s if ch.isdigit())
-        return float(digits) if digits else 0.0
-    df_plot["Reward %"] = df_plot["Reward (Expected)"].apply(extract_reward)
-    fig3d = go.Figure(data=[go.Scatter3d(
-        x=df_plot["Allocation (%)"],
-        y=df_plot["Risk Score"],
-        z=df_plot["Reward %"],
-        text=df_plot["Asset Class"],
-        mode='markers+text',
-        marker=dict(size=9, color=df_plot["Allocation (%)"], colorscale='Viridis', opacity=0.9)
-    )])
-    fig3d.update_layout(scene=dict(xaxis_title='Allocation (%)', yaxis_title='Risk Score', zaxis_title='Reward (%)'),
-                        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', title=f"3D Risk-Reward — {profile}")
-    chart_col1.plotly_chart(fig3d, use_container_width=True)
+    # small breakdown table
+    col_b.markdown("#### Allocation (summary)")
+    col_b.table(df[["Asset Class", "Allocation (%)"]].set_index("Asset Class"))
 
-# right-side smaller chart
-chart_col2.markdown("#### Allocation Breakdown (table)")
-# small spark table
-chart_col2.table(df[["Asset Class", "Allocation (%)"]].set_index("Asset Class"))
+with right:
+    # Performance metrics in readable boxes
+    st.subheader("Performance Metrics")
+    mm = metrics[profile]
+    # show metric cards with white boxes for readability
+    metric_cols = st.columns(len(mm))
+    for i, (k, v) in enumerate(mm.items()):
+        metric_cols[i].markdown(f"<div class='metric-box'><div style='font-weight:600'>{k}</div><div style='font-size:18px; margin-top:6px'>{v}</div></div>", unsafe_allow_html=True)
 
-# -------------------------
-# AI summary typing box
-# -------------------------
-st.markdown("### AI Analysis")
-ai_col1, ai_col2 = st.columns([2, 1])
+    st.markdown("<br>", unsafe_allow_html=True)
 
-with ai_col1:
-    if show_typing:
-        # Build a combined human-readable summary from the SUMMARY column (preserve original text)
-        # We'll craft a coherent paragraph: start with portfolio name, then join each summary sentence.
-        summary_lines = df["SUMMARY"].tolist()
-        # combine but keep short sentences
-        combined = f"{profile} — " + " ".join([s.strip() for s in summary_lines if isinstance(s, str)])
-        # typing animation into a placeholder
-        placeholder_text = st.empty()
-        typed = ""
-        delay = 0.01  # speed of typing (seconds per char)
-        for ch in combined:
-            typed += ch
-            placeholder_text.markdown(f"<div class='ai-box'><div class='ai-title'>System Analysis</div><div class='muted'>Generated insight (automated)</div><br><div>{typed}</div></div>", unsafe_allow_html=True)
-            time.sleep(delay)
-        # final write to ensure stable
-        placeholder_text.markdown(f"<div class='ai-box'><div class='ai-title'>System Analysis</div><div class='muted'>Generated insight (automated)</div><br><div>{combined}</div></div>", unsafe_allow_html=True)
-    else:
-        combined = f"{profile} — " + " ".join([s.strip() for s in df["SUMMARY"].tolist() if isinstance(s, str)])
-        st.markdown(f"<div class='ai-box'><div class='ai-title'>System Analysis</div><div class='muted'>Generated insight (automated)</div><br><div>{combined}</div></div>", unsafe_allow_html=True)
+    # AI summary + typing + sound
+    st.markdown("### System Insight")
+    # build combined summary (preserve original SUMMARY strings)
+    combined_paragraph = f"{profile} — " + " ".join([s.strip() for s in df["SUMMARY"].tolist() if isinstance(s, str)])
+    # escape for JS
+    escaped_text = html.escape(combined_paragraph).replace("\n", "<br>")
 
-with ai_col2:
-    st.markdown("#### Quick Actions")
-    st.markdown("- Download table (CSV)")
-    csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button("Download CSV", csv, file_name=f"{profile.replace(' ','_')}.csv", mime="text/csv")
-    st.markdown("")
-    st.markdown("#### Sources")
-    st.markdown("<div class='muted'>Data references used to form reward/risk bands</div>", unsafe_allow_html=True)
+    # Prepare HTML + JS for typing + typing sound (Web Audio API)
+    # The JS will type and play a subtle clicking oscillator tone for each character.
+    typing_html = f"""
+    <div class="ai-box" id="aiBox">
+      <div class="ai-title">System Analysis</div>
+      <div class="muted">Automated insight (read-only)</div>
+      <div style="height:10px;"></div>
+      <div id="typing" style="white-space:pre-wrap; font-size:14px; color: #FFFFFF;"></div>
+    </div>
+
+    <script>
+    const text = `{escaped_text}`;
+    const el = document.getElementById('typing');
+
+    const enable = {str(show_typing).lower()}; // boolean from Python
+    if (!enable) {{
+      el.innerHTML = text;
+    }} else {{
+      // WebAudio typing sound (subtle)
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioContext();
+      function playClick(volume=0.02, freq=1000, duration=0.03) {{
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = freq;
+        g.gain.value = volume;
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start();
+        setTimeout(()=> {{ o.stop(); }}, duration*1000);
+      }}
+
+      // typing
+      let i=0;
+      function typeChar() {{
+        if (i >= text.length) return;
+        el.innerHTML += text.charAt(i);
+        // play small click only for non-space chars
+        if (text.charAt(i) !== ' ' && Math.random() > 0.25) {{
+          playClick(0.012, 700+Math.random()*800, 0.02 + Math.random()*0.02);
+        }}
+        i++;
+        // dynamic delay: short after commas/periods
+        let delay = 12 + Math.random()*10;
+        const ch = text.charAt(i-1);
+        if (ch === ',' ) delay = 80;
+        if (ch === '.' || ch === '\\n') delay = 160;
+        setTimeout(typeChar, delay);
+      }}
+      // Ensure audio context is resumed after user gesture (some browsers require)
+      document.addEventListener('click', function initAudio() {{
+        if (audioCtx.state === 'suspended') {{
+          audioCtx.resume();
+        }}
+        // remove listener once resumed
+        document.removeEventListener('click', initAudio);
+      }});
+      // start typing after small delay
+      setTimeout(typeChar, 300);
+    }}
+    </script>
+    """
+    st.components.v1.html(typing_html, height=220)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("#### Data Sources")
     st.dataframe(sources, use_container_width=True)
 
-# -------------------------
 # Footer
-# -------------------------
-st.markdown("<br><hr style='border:1px solid rgba(255,255,255,0.04)'>", unsafe_allow_html=True)
-st.markdown("<div style='color: #D8D8D8; font-size:13px;'>Made with care by <b>Chaitali Khavanekar</b> — Portfolio models are illustrative. Consult a financial advisor before investing.</div>", unsafe_allow_html=True)
+st.markdown("<hr style='border:1px solid rgba(255,255,255,0.04)'>", unsafe_allow_html=True)
+st.markdown("<div style='color: #E6F0EE; font-size:13px;'>Made with care by <b>Chaitali Khavanekar</b>. Models are illustrative — consult an advisor before investing.</div>", unsafe_allow_html=True)
