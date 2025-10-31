@@ -2,201 +2,206 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import numpy as np
 
-# ----- PAGE CONFIG -----
+# ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Asset Allocation Dashboard", layout="wide")
 
-# ----- APP STYLING -----
+# ---------- CUSTOM DESIGN ----------
 st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-/* Background gradient */
-[data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: #ffffff;
-    font-family: 'Poppins', sans-serif;
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #121212, #1a1a2e, #16213e);
+    color: #f1f1f1;
 }
 
-/* Title glow */
-h1, h2, h3 {
-    color: #00ffe1;
-    text-shadow: 0 0 15px #00ffe1, 0 0 30px #00ffe1;
+/* Header */
+h1 {
+    color: #00d4ff;
     font-weight: 700;
+    font-size: 38px;
+    text-align: center;
+    padding-bottom: 0.3em;
+    border-bottom: 2px solid #00d4ff;
+    margin-bottom: 0.8em;
+    letter-spacing: 1px;
 }
 
-/* 3D-style data table */
-.dataframe {
-    border-radius: 15px;
-    border: 1px solid #00ffd5;
-    box-shadow: 0 0 20px #00ffd5;
-    background-color: rgba(10, 10, 10, 0.9);
-    color: #ffffff;
+/* Subheaders */
+h2, h3 {
+    color: #00e6ac;
+    font-weight: 600;
+    margin-top: 25px;
 }
 
 /* Sidebar */
 [data-testid="stSidebar"] {
-    background-color: #1a1a1a;
-    border-right: 2px solid #00ffe1;
-    box-shadow: 5px 0 10px rgba(0, 255, 225, 0.3);
+    background: rgba(20, 20, 40, 0.95);
+    border-right: 2px solid #00bcd4;
+    box-shadow: 4px 0 15px rgba(0, 188, 212, 0.2);
 }
 
-/* Metrics styling */
-[data-testid="stMetricValue"] {
-    color: #00ffd5 !important;
+/* DataFrame table style */
+[data-testid="stDataFrame"] table {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border-collapse: collapse;
+    overflow: hidden;
+}
+
+[data-testid="stDataFrame"] th {
+    background: #00d4ff;
+    color: black;
     font-weight: bold;
-    text-shadow: 0 0 10px #00ffd5;
+    text-align: center;
+}
+
+[data-testid="stDataFrame"] td {
+    text-align: center;
+    color: #e8e8e8;
+    padding: 6px;
+}
+
+/* Metric cards */
+[data-testid="stMetricValue"] {
+    color: #00ffd0 !important;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+/* Expander */
+[data-testid="stExpander"] {
+    background-color: rgba(20, 20, 40, 0.8);
+    border: 1px solid #00bcd4;
+    border-radius: 10px;
+    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ----- TITLE -----
-st.title("💼 Asset Allocation Portfolio Dashboard")
-st.markdown("Compare risk profiles, asset weights, and returns with interactive visuals and logic insights.")
+# ---------- TITLE ----------
+st.markdown("<h1>💼 Asset Allocation Portfolio Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("#### 📊 Visualize risk, reward & diversification with elegant charts and analytics.")
 
-# ----- DATA -----
+# ---------- DATA ----------
 data = {
     "Low Risk (45–65)": pd.DataFrame({
-        "Asset Class": ["Equity (Stocks / MFs)", "Debt / Fixed Income", "Gold / Commodities", "Real Estate", "Cash / Liquid Funds"],
+        "Asset Class": ["Equity", "Debt", "Gold", "Real Estate", "Cash"],
         "Allocation": [15, 50, 20, 10, 5],
         "Risk": ["Moderate", "Low", "Moderate", "Low-Moderate", "Very Low"],
         "Reward": ["9–11%", "6–7%", "8–9%", "6–8%", "3–4%"],
         "Time Period": ["5–7 yrs", "3–5 yrs", "7–10 yrs", "3–5 yrs", "0–1 yrs"],
-        "Portfolio Impact": [15, 50, 20, 10, 5],
         "Logic": [
-            "Stock market fluctuates; limited impact at 15%.",
-            "Safer base; returns stable; main stability pillar.",
-            "Hedge during inflation; long-term safe asset.",
-            "Illiquid but steady long-term value.",
-            "Used for liquidity or reinvestment."
+            "Equities provide moderate exposure to growth.",
+            "Debt ensures capital safety and steady returns.",
+            "Gold protects against inflation shocks.",
+            "Real estate adds tangible diversification.",
+            "Cash ensures liquidity."
         ],
         "Summary": [
-            "Inflation protection but limited growth.",
-            "Predictable cash flow, low volatility.",
-            "Moves opposite to equity; protects during crises.",
-            "Common Indian asset; low liquidity.",
-            "Useful for emergencies."
+            "Stable and defensive portfolio for capital preservation.",
+            "Ideal for conservative investors seeking low volatility.",
+            "Provides safety with some inflation-adjusted growth.",
+            "Limited growth, high stability and liquidity."
         ]
     }),
 
     "Moderate Risk (30–45)": pd.DataFrame({
-        "Asset Class": ["Equity (Stocks / MFs)", "Debt / Fixed Income", "Real Estate", "Gold / Commodities", "Cash / Liquid Funds"],
+        "Asset Class": ["Equity", "Debt", "Real Estate", "Gold", "Cash"],
         "Allocation": [40, 35, 15, 7, 3],
         "Risk": ["High", "Low", "Moderate", "Moderate", "Very Low"],
         "Reward": ["11–13%", "6–7%", "8–9%", "8%", "3–4%"],
         "Time Period": ["7–10 yrs", "3–5 yrs", "7–10 yrs", "3–5 yrs", "0–1 yrs"],
-        "Portfolio Impact": [40, 35, 15, 7, 3],
         "Logic": [
-            "Younger investors can handle volatility; long horizon helps compounding.",
-            "Ensures portfolio stability; reduces swings.",
-            "Diversifies and adds inflation-adjusted growth.",
-            "Acts as hedge during uncertainty.",
-            "Maintains liquidity for emergencies."
+            "Equities drive long-term wealth creation.",
+            "Debt balances volatility.",
+            "Real estate adds tangible asset growth.",
+            "Gold acts as inflation hedge.",
+            "Cash keeps flexibility."
         ],
         "Summary": [
-            "Wealth generator; balanced by long-term compounding.",
-            "Provides steady income and stability.",
-            "Inflation-adjusted tangible asset.",
-            "Adds safety; protects against downturns.",
-            "Avoids cash drag; useful for opportunities."
+            "Balanced and growth-oriented portfolio for mid-term goals."
         ]
     }),
 
     "High Risk (25–30)": pd.DataFrame({
-        "Asset Class": ["Equity (Stocks / MFs)", "Debt / Fixed Income", "Gold / Commodities", "Real Estate", "Cash / Liquid Funds"],
+        "Asset Class": ["Equity", "Debt", "Gold", "Real Estate", "Cash"],
         "Allocation": [60, 15, 10, 10, 5],
         "Risk": ["High", "Low", "Moderate", "Moderate", "Very Low"],
         "Reward": ["12–14%", "6–7%", "8–9%", "9–10%", "3–4%"],
         "Time Period": ["7–10 yrs", "1–3 yrs", "5–7 yrs", "7–10 yrs", "0–1 yrs"],
-        "Portfolio Impact": [60, 15, 10, 10, 5],
         "Logic": [
-            "Long-term exposure; short-term volatility tolerable.",
-            "Stabilizer to offset equity dips.",
-            "Diversifies global uncertainty impact.",
-            "Adds tangible diversification and rental income.",
-            "Emergency liquidity buffer."
+            "Equity is the major growth engine.",
+            "Debt adds safety layer.",
+            "Gold diversifies risk.",
+            "Real estate offers long-term appreciation.",
+            "Cash for liquidity buffer."
         ],
         "Summary": [
-            "Maximizes compounding; suited for long-term growth.",
-            "Reduces panic in volatile years.",
-            "Protection from global inflation shocks.",
-            "Inflation-beating, less liquid asset.",
-            "Quick fund for emergencies."
+            "Aggressive growth portfolio for long-term compounding."
         ]
     })
 }
 
-# ----- RISK–RETURN METRICS -----
+# ---------- RISK METRICS ----------
 metrics = {
-    "Low Risk (45–65)": {
-        "Expected Return": "7.95%", "Risk": "9.9%", "Worst": "-11%", "Best": "27%", "Sharpe-like": "0.80"
-    },
-    "Moderate Risk (30–45)": {
-        "Expected Return": "9.0%", "Risk": "11.3%", "Worst": "-13%", "Best": "31%", "Sharpe-like": "0.80"
-    },
-    "High Risk (25–30)": {
-        "Expected Return": "10.75%", "Risk": "19.6%", "Worst": "-28%", "Best": "50%", "Sharpe-like": "0.55"
-    }
+    "Low Risk (45–65)": {"Expected Return": "7.95%", "Risk": "9.9%", "Worst": "-11%", "Best": "27%"},
+    "Moderate Risk (30–45)": {"Expected Return": "9.0%", "Risk": "11.3%", "Worst": "-13%", "Best": "31%"},
+    "High Risk (25–30)": {"Expected Return": "10.75%", "Risk": "19.6%", "Worst": "-28%", "Best": "50%"}
 }
 
-# ----- SOURCES -----
-sources = pd.DataFrame({
-    "Asset": ["Equity (Nifty/Sensex)", "Debt (Govt + Corporate)", "Gold", "Real Estate", "Cash/FD"],
-    "Historical Return": ["11–13%", "6–8%", "7–9%", "8–10%", "4–5%"],
-    "Volatility": ["12–18%", "3–5%", "10–12%", "8–10%", "<1%"],
-    "Source": [
-        "15-year CAGR of Indian Equity Market",
-        "Average YTM (2010–2024)",
-        "RBI & World Gold Council Data",
-        "Knight Frank + RBI Housing Index",
-        "Bank FD Rates (SBI, HDFC, ICICI)"
-    ]
-})
-
-# ----- APP UI -----
-profile = st.sidebar.selectbox("Select Risk Profile", list(data.keys()))
-chart_type = st.sidebar.selectbox("Select Chart Type", ["Bar Chart", "Pie Chart", "Line Chart"])
-animate = st.sidebar.checkbox("Enable Chart Animation", value=True)
-
+# ---------- APP UI ----------
+profile = st.sidebar.selectbox("🎯 Choose Risk Profile", list(data.keys()))
+chart_type = st.sidebar.selectbox("📊 Choose Chart Type", ["Bar Chart", "Pie Chart", "3D Chart"])
 df = data[profile]
-st.subheader(f"📊 {profile} Portfolio Overview")
 
-# ----- MAIN TABLE -----
+# ---------- DISPLAY DATA ----------
+st.markdown(f"### 🧾 Portfolio Overview: {profile}")
 st.dataframe(df, use_container_width=True)
 
-# ----- CHART -----
+# ---------- CHARTS ----------
 if chart_type == "Bar Chart":
-    fig = px.bar(df, x="Asset Class", y="Allocation", color="Risk",
-                 text="Allocation", animation_frame="Time Period" if animate else None)
+    fig = px.bar(df, x="Asset Class", y="Allocation", color="Risk", text="Allocation", color_discrete_sequence=px.colors.sequential.Tealgrn)
 elif chart_type == "Pie Chart":
-    fig = px.pie(df, names="Asset Class", values="Allocation", color="Risk",
-                 hole=0.3)
+    fig = px.pie(df, names="Asset Class", values="Allocation", hole=0.35, color_discrete_sequence=px.colors.sequential.Teal)
 else:
-    fig = px.line(df, x="Asset Class", y="Allocation", markers=True, color="Risk")
+    # 3D Chart – Allocation vs Reward vs Risk
+    risk_map = {"Very Low": 1, "Low": 2, "Low-Moderate": 3, "Moderate": 4, "High": 5}
+    df["Risk Score"] = df["Risk"].map(risk_map)
+    df["Reward %"] = df["Reward"].str.replace("%", "").str.extract("(\d+)").astype(float)
+    fig = go.Figure(data=[go.Scatter3d(
+        x=df["Allocation"],
+        y=df["Risk Score"],
+        z=df["Reward %"],
+        mode='markers+text',
+        text=df["Asset Class"],
+        marker=dict(size=10, color=df["Risk Score"], colorscale='Viridis', opacity=0.9)
+    )])
+    fig.update_layout(scene=dict(
+        xaxis_title='Allocation (%)',
+        yaxis_title='Risk Level',
+        zaxis_title='Reward (%)',
+        bgcolor="rgba(10,10,20,0.8)"
+    ))
 
-fig.update_layout(title=f"{chart_type} — {profile}", title_x=0.3)
+fig.update_layout(title=f"{chart_type} — {profile}", title_x=0.4, plot_bgcolor='rgba(0,0,0,0)')
 st.plotly_chart(fig, use_container_width=True)
 
-# ----- RISK–RETURN METRICS -----
-st.markdown("### 📈 Portfolio Performance Summary")
-metric = metrics[profile]
-cols = st.columns(len(metric))
-for i, (key, val) in enumerate(metric.items()):
-    cols[i].metric(key, val)
+# ---------- METRICS ----------
+st.markdown("### 📈 Performance Summary")
+cols = st.columns(len(metrics[profile]))
+for i, (k, v) in enumerate(metrics[profile].items()):
+    cols[i].metric(k, v)
 
-# ----- OPTIONAL: 3D CHART -----
-st.markdown("### 🌐 3D Risk–Reward Surface (Demo)")
-x = np.linspace(-5, 5, 50)
-y = np.linspace(-5, 5, 50)
-x, y = np.meshgrid(x, y)
-z = np.sin(np.sqrt(x**2 + y**2))
-fig3d = go.Figure(data=[go.Surface(z=z, x=x, y=y, colorscale='Viridis')])
-fig3d.update_layout(scene=dict(xaxis_title='Asset Class', yaxis_title='Risk', zaxis_title='Reward'))
-st.plotly_chart(fig3d, use_container_width=True)
-
-# ----- SOURCES -----
+# ---------- SOURCES ----------
 with st.expander("📚 Data Sources & References"):
-    st.dataframe(sources, use_container_width=True)
+    st.write("""
+    - Equity data: Nifty/Sensex CAGR (15 years)
+    - Debt: RBI & SEBI bond returns
+    - Gold: World Gold Council, RBI Data
+    - Real Estate: Knight Frank Housing Index
+    - Cash: Major bank FD rates (SBI, HDFC, ICICI)
+    """)
 
-st.markdown("Made with ❤️ by Chaitali Khavanekar")
+st.markdown("<br><center>✨ Made with precision by <b>Chaitali Khavanekar</b></center>", unsafe_allow_html=True)
